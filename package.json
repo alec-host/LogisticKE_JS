@@ -1,0 +1,19 @@
+{
+  "name": "little_parcel",
+  "version": "1.0.0",
+  "description": "little delivery apis.",
+  "main": "server.js",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "express": "^4.17.1",
+    "mysql": "^6.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "author": "alec",
+  "license": "ISC",
+  "keywords": []
+}
