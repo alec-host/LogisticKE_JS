@@ -7,7 +7,7 @@ function saveParcelBookingRequest(pool,content,recordCallback) {
 		if(err){
 			throw err;
 		}else{
-			var insert_value = [content.reference_no,content.recipient_name,content.recipient_mobile,content.recipient_addresss,content.pick_up_latlng,content.pick_up_address,content.drop_off,content.drop_off_latlng,content.provider,content.date_created];
+			var insert_value = [content.reference_no,content.recipient_name,content.recipient_mobile,content.recipient_addresss,content.pick_up_latlng,content.pick_up_address,content.drop_off_latlng,content.drop_off_address,content.provider,content.date_created];
 			conn.query("INSERT " + 
 			           "INTO " +
 					   "`db_parcel_service`.`tbl_booking_request` " +
