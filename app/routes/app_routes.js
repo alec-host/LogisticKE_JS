@@ -4,6 +4,7 @@ const crypto   = require('crypto');
 
 const db       = require('../db/config/dbConfig');
 const model    = require('../db/model');
+
 const auth     = require('../utils/little_method_handler');
 const utils    = require('../utils/rider_handler');
 const template = require('../booking_template/book-json');
@@ -51,6 +52,10 @@ module.exports = function(app) {
 	*/
 	app.post('/book', async (req, res) => {
 		var client_json = req.body;
+		console.log(client_json);
+		var date_part = new Date().toISOString().slice(0, 10) ;
+		var t = new Date();
+		var new_json = Object.assign({reference_no: crypto.randomBytes(16).toString("hex")},client_json, {date_created: date_part+" "+t.getHours()+':'+t.getMinutes()+':'+t.getSeconds()});
 		
 		auth.generateClientToken({"provider": "little"},(getActiveToken) => {
 			/*
@@ -64,7 +69,10 @@ module.exports = function(app) {
 			*/
 			auth.bookDelivery({"provider": "little"},client_json_parsed,getActiveToken,(getServerResponse) => {
 				if(JSON.stringify(getServerResponse).includes("BookRideServiceException") || JSON.stringify(getServerResponse).includes("error")) {
-					res.status(200).send(getServerResponse);
+					model.saveParcelBookingRequest(conn,new_json,(error, row) => {
+						//-.message.
+						res.status(200).send(getServerResponse);
+					});
 					//console.log(client_json.pick_up_latlng);
 					//console.log(client_json.drop_off_latlng);
 					//console.log(client_json.type);
