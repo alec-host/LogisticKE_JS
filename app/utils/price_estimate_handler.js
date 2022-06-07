@@ -38,5 +38,4 @@ getDeliveryPriceEstimate = function(json_payload,vehicle_type) {
 	}
 }
 
-
 module.exports.getDeliveryPriceEstimate = getDeliveryPriceEstimate;

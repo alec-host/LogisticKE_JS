@@ -4,8 +4,10 @@
   "description": "little delivery apis.",
   "main": "server.js",
   "dependencies": {
+    "axios": "^0.27.2",
     "dotenv": "^16.0.1",
     "express": "^4.17.1",
+    "haversine-distance": "^1.2.1",
     "mysql": "^6.9.0"
   },
   "devDependencies": {},
