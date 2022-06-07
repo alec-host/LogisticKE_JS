@@ -3,7 +3,7 @@ var axios = require('axios');
 distanceByGoogleMatrixApi = function(origins,destinations,callback) {
     var config = {
         method: 'get',
-        url: 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=-1.265955,36.805038&destinations=-1.2648989,36.8372708&key=AIzaSyA5tdtg7PU2eVqRaDjB-iSbGoqSzHSVBog',
+        url: 'https://maps.googleapis.com/maps/api/distancematrix/json?origins='+origins+'&destinations='+destinations+'&key=AIzaSyA5tdtg7PU2eVqRaDjB-iSbGoqSzHSVBog',
         headers: { }
       };
       

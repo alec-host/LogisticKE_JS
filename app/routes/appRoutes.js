@@ -1,22 +1,20 @@
-const express  = require('express');
-const mysql    = require('mysql');
-const crypto   = require('crypto'); 
+const express = require('express');
+const mysql   = require('mysql');
+const crypto  = require('crypto'); 
 
+const db      = require('../db/config/dbConfig');
+const model   = require('../db/model')
 
-const db       = require('../db/config/dbConfig');
-const model    = require('../db/model');
+const store   = require('../db/rateCardStore');
 
-
-const store    = require('../db/rate_card_store');
-
-const utils = require('../utils/little_method_handler');
-const drivers = require('../utils/rider_handler');
+const utils = require('../utils/littleOperationHandler');
 const template = require('../booking_template/book-json');
 const parcel_charge = require('../utils/getParcelCharge');
-const test_estimate_json = require('../booking_template/test-estimate-json');
-const test_estimate_price = require('../utils/price_estimate_handler');
 const matrix_distance = require('../utils/getDistanceViaGoogleMatrix');
 
+const test_driver = require('../utils/testRiderHandler');
+const test_estimate_price = require('../utils/testPriceEstimateHandler');
+const test_estimate_json = require('../booking_template/test-estimate-json');
 
 var conn = mysql.createPool({connectionLimit: db.connectionLimit, host: db.host, user: db.user, password: db.password, database: db.database});
 
@@ -132,7 +130,7 @@ module.exports = function(app) {
 		var client_json = req.body;
 		utils.generateClientToken({"provider": "little"},(getAccessToken) => {
 			utils.pickDriver(client_json,getAccessToken,(getServerResponse) => {
-				res.status(200).send(drivers.driverInformationFilter(getServerResponse));
+				res.status(200).send(test_driver.driverInformationFilter(getServerResponse));
 			});			
 		});
 	});
