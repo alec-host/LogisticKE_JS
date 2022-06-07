@@ -37,24 +37,24 @@ module.exports = function(app) {
 		var t = new Date();
 		var new_json = Object.assign({reference_no: crypto.randomBytes(16).toString("hex")},client_json,{date_created: date_part+" "+t.getHours()+':'+t.getMinutes()+':'+t.getSeconds()});
 		
-		utils.generateClientToken({"provider": "little"},(getActiveToken) => {
+		utils.generateClientToken({"provider": "little"},(getActiveTokenCallback) => {
 			/*
 			*-.parse params to book json object.
 			*-.method:sigleBookingJsonBluePrint.
 			*/
-			client_json_parsed = template.sigleBookingJsonBluePrint(client_json,"no");
+			var parsed_client_json = template.sigleBookingJsonBluePrint(client_json,"no");
 			/*
 			*-.make a booking operation.
 			*-.method:bookDelivery.
 			*/
-			utils.bookDelivery({"provider": "little"},client_json_parsed,getActiveToken,(getServerResponse) => {
-				var json_string = JSON.stringify(getServerResponse);
+			utils.bookDelivery({"provider": "little"},parsed_client_json,getActiveTokenCallback,(getServerResponseCallback) => {
+				var json_string = JSON.stringify(getServerResponseCallback);
 				if(json_string.includes("BookRideServiceException") || json_string.includes("error")) {
 					//-.log the book request.
 					model.recordParcelBookRequest(conn,new_json,(error, row) => {
 						//model.updateParcelBookRequestWithTripID(conn,'1010111','254725239191', (error2,row2) => {
 							//-.message.
-							res.status(200).send(getServerResponse);
+							res.status(200).send(getServerResponseCallback);
 						//});
 					});
 				}else{
@@ -62,7 +62,7 @@ module.exports = function(app) {
 					model.recordParcelBookRequest(conn,new_json,(error, row) => {
 						//model.updateParcelBookRequestWithTripID(conn,'1010112','254725239191', (error2,row2) => {
 							//-.message.
-							res.status(200).send(getServerResponse);
+							res.status(200).send(getServerResponseCallback);
 						//});
 					});
 				}
@@ -71,27 +71,43 @@ module.exports = function(app) {
 	});
 	/**
 	* @route GET /getCostEstimateApi
-	* @param {string} pickup.path.required|
-	* @param {string} dropoff.path.required
+	* @param {string} origins.path.required
+	* @param {string} destinations.path.required
 	* @returns {object} 200 - successful payload which includes trip cost estimate etc.
 	* @returns {Error} default - {message: ops something wrong has happened.}
 	*/
 	app.get('/getCostEstimateApi', async(req,res) => {
-		matrix_distance.distanceByGoogleMatrixApi((getRateCardCallback) => {
-			if(getRateCardCallback) {
-				var rate_card_obj = store.rateCardConfig(); 
-				if(rate_card_obj) {
-					var distance_in_km = (getRateCardCallback['rows'][0]['elements'][0]['distance']['text']).replace('km','').trim();
-					parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
-						res.status(200).send({"error":false,"message":"rate charge applicable found.","base_charge":getChargeCallback});
+		var origins = req.body.origins;
+		var destinations = req.body.destinations;
+		if(origins != '' && destinations !='') {
+			//-.validate coordinates - lat lng.
+			let pattern = new RegExp('^-?([1-8]?[1-9]|[1-9]0)\\.{1}\\d{1,6}');
+			if(pattern.test(origins.split(',')[0].trim()) && pattern.test(origins.split(',')[1].trim())) {
+				if(pattern.test(destinations.split(',')[0].trim()) && pattern.test(destinations.split(',')[1].trim())) {
+					matrix_distance.distanceByGoogleMatrixApi(origins,destinations,(getRateCardCallback) => {
+						if(getRateCardCallback) {
+							var rate_card_obj = store.rateCardConfig(); 
+							if(rate_card_obj) {
+								var distance_in_km = (getRateCardCallback['rows'][0]['elements'][0]['distance']['text']).replace('km','').trim();
+								parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
+									res.status(200).send({"error":false,"message":"rate charge applicable found.","base_charge":getChargeCallback});
+								});
+							} else{
+								res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
+							}
+						}else{
+							res.status(200).send({"error":true,"message":"Ops something wrong has happened."});
+						}
 					});
-				} else{
-					res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
+				}else{
+					res.status(200).send({"error":true,"message":"invalid inputs."});	
 				}
 			}else{
-				res.status(200).send({"error":true,"message":"Ops something wrong has happened."});
+				res.status(200).send({"error":true,"message":"invalid inputs."});
 			}
-		});
+	   }else{
+			res.status(200).send({"error":true,"message":"pickup and drop off points have to be checked."});
+	   }
 	});	
 	/**
 	* @route POST /testGetTokenApi
