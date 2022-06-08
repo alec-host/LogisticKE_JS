@@ -104,7 +104,22 @@ module.exports = function(app) {
 	   }else{
 			res.status(200).send({"error":true,"message":"pickup and drop off points have to be checked."});
 	   }
-	});	
+	});
+	/**
+	* @route POST /cancelApi
+	* @param {string} provider.path.required
+	* @param {string} trip_id.path.required
+	* @returns {object} 200 - returns a json object.
+	* @returns {Error} default - {message: ops something wrong has happened.}
+	*/	
+	app.post('/cancelApi', async(req,res) => {
+		var client_json = req.body;
+		utils.generateClientToken(client_json,(getActiveTokenCallback) => {	
+			utils.cancelBookRequest(client_json,getActiveTokenCallback,(getServerResponseCallback) => {	
+				res.status(200).send(getServerResponseCallback);
+			});
+		});
+	});
 	/**
 	* @route POST /testGetTokenApi
 	* @param {string} client_json.path.required

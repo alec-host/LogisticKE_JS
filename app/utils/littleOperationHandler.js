@@ -1,4 +1,5 @@
 const http   = require("https");
+const axios  = require('axios').default;
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -130,13 +131,13 @@ pickDriver = function (content,token_json,callback) {
 *-.return: json payload.
 **/
 bookDelivery = function (provider,content,token_json,callback) {
-	let responseData = '';	
+	//let responseData = '';	
 	callback   = callback || function(){};	
 	/*
 	-.convert to json object.
 	*/
-	
-	auth = JSON.parse(token_json);
+	var auth = JSON.parse(token_json);
+	var data = JSON.stringify(content);
 
 	if(provider.provider == 'little'){
 		/**
@@ -147,7 +148,6 @@ bookDelivery = function (provider,content,token_json,callback) {
 		method   = 'POST';
 		headers_payload = {			
 							"Content-Type": "application/json",
-							"Content-Length": JSON.stringify(content).length,
 							"Authorization": "Bearer "+auth.token
 						  };
 	}else{
@@ -162,38 +162,23 @@ bookDelivery = function (provider,content,token_json,callback) {
 
 	const options = {
 		"method":method,
-		"hostname":hostname,
-		"port":null,
-		"path":app_path,
-		"headers": headers_payload
-	}
+		"url":'https://'+hostname+app_path,
+		"headers": headers_payload,
+		"data": JSON.parse(data)
+	};
 	
-	const req = http.request(options,res => {
-		res.on('data', chuck => {
-			responseData+=chuck;
-		});
-	
-		res.on('end',() => {
-			try{
-				return callback(responseData);
-			}catch(error){
-				return callback();
-			}
-		});
-		
-		res.on('error', (err) => {
-			return {"message":"Ops something wrong has happened."};
-		});		
-	});
-	req.write(JSON.stringify(content));
-	req.end();
+	axios.request(options).then(function(response) {
+		callback(response.data)
+	}).catch(function(error){
+		callback(error.response.data);
+	}); 
 }
 /**
 *-.method: shipping estimate.
 *-.return: json payload.
 **/
 getShippingEstimate = function (provider,content,token_json,callback) {
-	let responseData = '';	
+
 	callback   = callback || function(){};	
 	/*
 	-.convert to json object.
@@ -223,34 +208,65 @@ getShippingEstimate = function (provider,content,token_json,callback) {
 
 	const options = {
 		"method":method,
-		"hostname":hostname,
-		"port":null,
-		"path":(app_path),
-		"headers": headers_payload
-	}	
+		"url":'https://'+hostname+app_path,
+		"headers": headers_payload,
+		"data": null
+	};
 	
-	const req = http.request(options,res => {
-		res.on('data', chuck => {
-			responseData+=chuck;
-		});
-	
-		res.on('end',() => {
-			try{
-				return callback(responseData);
-			}catch(error){
-				return callback();
-			}
-		});
-		
-		res.on('error', (err) => {
-			return {"message":"Ops something wrong has happened."};
-		});		
-	});
+	axios.request(options).then(function(response) {
+		callback(response.data)
+	}).catch(function(error){
+		callback(error);
+	}); 
+}
+/**
+*-.method: shipping estimate.
+*-.return: json payload.
+**/
+cancelBookRequest = function (content,token_json,callback) {
+	let responseData = '';	
+	callback   = callback || function(){};	
+	/*
+	-.convert to json object.
+	*/
+	var auth = JSON.parse(token_json);
+	var data = JSON.stringify({reason: content.reason});
+	if(content.provider == 'little'){
+		/**
+		* LITTLE HEADER
+		**/
+		hostname = process.env.API_LITTLE_HOST_NAME;
+		app_path = process.env.API_LITTLE_CANCEL_PATH.replace('{0}',content.trip_id);
+		method   = 'POST';
+		headers_payload = {			
+			"Content-Type": "application/json",
+			"Authorization": "Bearer "+auth.token};
+	}else{
+		/**
+		* SENDYIT HEADER
+		**/
+		headers_payload = {			
+							"Content-Type": "application/json",
+							"Content-Length": "0"
+						  };
+	}
 
-	req.end();
+	const options = {
+		"method":method,
+		"url":'https://'+hostname+app_path,
+		"headers": headers_payload,
+		"data": data
+	};
+	
+	axios.request(options).then(function(response) {
+		callback(response.data)
+	}).catch(function(error){
+		callback(error);
+	}); 
 }
 
 module.exports.generateClientToken = generateClientToken;
 module.exports.pickDriver = pickDriver;
 module.exports.bookDelivery = bookDelivery;
 module.exports.getShippingEstimate = getShippingEstimate;
+module.exports.cancelBookRequest = cancelBookRequest;
