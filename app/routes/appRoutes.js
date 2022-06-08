@@ -11,6 +11,7 @@ const utils = require('../utils/littleOperationHandler');
 const template = require('../booking_template/bookRequestJsonPlaceholder');
 const parcel_charge = require('../utils/getParcelCharge');
 const matrix_distance = require('../utils/getDistanceViaGoogleMatrix');
+const valid = require('../utils/validateCoordinate');
 
 const test_driver = require('../utils/testRiderHandler');
 const test_estimate_price = require('../utils/testPriceEstimateHandler');
@@ -78,10 +79,9 @@ module.exports = function(app) {
 		var origins = req.body.origins;
 		var destinations = req.body.destinations;
 		if(origins != '' && destinations !='') {
-			//-.validate coordinates - lat lng.
-			let pattern = new RegExp('^-?([1-8]?[1-9]|[1-9]0)\\.{1}\\d{1,6}');
-			if(pattern.test(origins.split(',')[0].trim()) && pattern.test(origins.split(',')[1].trim())) {
-				if(pattern.test(destinations.split(',')[0].trim()) && pattern.test(destinations.split(',')[1].trim())) {
+			//-.validate coordinates - lat/lng.
+			valid.validateLocationCordinates(origins,destinations,(getIsValidLocationCordinatesCallback) => {
+				if(getIsValidLocationCordinatesCallback == true) {
 					matrix_distance.distanceByGoogleMatrixApi(origins,destinations,(getRateCardCallback) => {
 						if(getRateCardCallback) {
 							var rate_card_obj = store.rateCardConfig(); 
@@ -98,11 +98,9 @@ module.exports = function(app) {
 						}
 					});
 				}else{
-					res.status(200).send({"error":true,"message":"invalid inputs."});	
+					res.status(200).send({"error":true,"message":"invalid input: i.e pickup/drop off points."});
 				}
-			}else{
-				res.status(200).send({"error":true,"message":"invalid inputs."});
-			}
+			});
 	   }else{
 			res.status(200).send({"error":true,"message":"pickup and drop off points have to be checked."});
 	   }
