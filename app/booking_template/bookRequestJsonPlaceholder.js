@@ -5,13 +5,16 @@ dotenv.config();
 *-.method: json template for single booking.
 **/
 function sigleBookingJsonBluePrint(content,is_live="no") {
+
+	var vehicle_type = process.env.API_LITTLE_VEHICLE_TYPE.split(',');
+
 	if(is_live == "no") {
 		mail = process.env.API_LITTLE_TEST_USER;;
 	}else{
 		if(is_live == "") {
-			mail = "";
+			mail = process.env.API_LITTLE_TEST_USER;
 		}else{
-			mail = "bbbbbbbbbbbbbbbbb";
+			mail = process.env.API_AIRDUKA_MAIL;
 		}
 	}
 	const payload = {
@@ -23,16 +26,16 @@ function sigleBookingJsonBluePrint(content,is_live="no") {
 			"picture": "https://cdn.standardmedia.co.ke/images/wednesday/ylcv3nuvqz5tabulgz615db51a1e15d.jpg"
 		},
 		"vehicle": {
-			"type":process.env.API_LITTLE_VEHICLE_TYPE,
+			"type":vehicle_type[5],
 			"details": {
-				"itemCarried": "My ORDER ITEM[S]",
+				"itemCarried": "AirDuka:ORDER ITEM[S]",
 				"size": content.parcel_size,
 				"recipientName": content.recipient_name,
 				"recipientMobile": content.recipient_mobile,
 				"recipientAddress": content.recipient_addresss,
 				"contactPerson": content.contact_name,
 				"deliveryNotes": content.delivery_notes,
-				"typeOfAddress": "Office"
+				"typeOfAddress": "AirDuka:Office"
 			}
 		},
 		"pickUp": {
@@ -45,7 +48,7 @@ function sigleBookingJsonBluePrint(content,is_live="no") {
 		},
 		"dropOffs": [
 			{
-				"order": 1,
+				"order": content.order_id,
 				"address": content.drop_off_address,
 				"latlng": content.drop_off_latlng,
 				"contactMobileNumber": content.recipient_mobile,

@@ -8,7 +8,7 @@ const model   = require('../db/model')
 const store   = require('../db/rateCardStore');
 
 const utils = require('../utils/littleOperationHandler');
-const template = require('../booking_template/book-json');
+const template = require('../booking_template/bookRequestJsonPlaceholder');
 const parcel_charge = require('../utils/getParcelCharge');
 const matrix_distance = require('../utils/getDistanceViaGoogleMatrix');
 
@@ -148,7 +148,7 @@ module.exports = function(app) {
 		utils.generateClientToken({"provider": "little"},(getActiveToken) => {	
 			utils.getShippingEstimate({"provider": "little"},client_json,getActiveToken,(getServerResponse) => {	
 			if(getServerResponse !== undefined) {
-				let price_range = test_estimate_price.getDeliveryPriceEstimate(JSON.parse(getServerResponse),vehicle_type[1]);
+				let price_range = test_estimate_price.getDeliveryPriceEstimate(JSON.parse(getServerResponse),vehicle_type[5]);
 				res.status(200).send({price_range});
 			}else{
 				res.status(200).send({"message":"ops something wrong has happened."});

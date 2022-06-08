@@ -1,9 +1,12 @@
 var axios = require('axios');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 distanceByGoogleMatrixApi = function(origins,destinations,callback) {
     var config = {
         method: 'get',
-        url: 'https://maps.googleapis.com/maps/api/distancematrix/json?origins='+origins+'&destinations='+destinations+'&key=AIzaSyA5tdtg7PU2eVqRaDjB-iSbGoqSzHSVBog',
+        url: 'https://maps.googleapis.com/maps/api/distancematrix/json?origins='+origins+'&destinations='+destinations+'&key='+process.env.API_GOOGLE_MATRIX_KEY,
         headers: { }
       };
       
