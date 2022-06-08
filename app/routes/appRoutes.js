@@ -87,9 +87,13 @@ module.exports = function(app) {
 							var rate_card_obj = store.rateCardConfig(); 
 							if(rate_card_obj) {
 								var distance_in_km = (getRateCardCallback['rows'][0]['elements'][0]['distance']['text']).replace('km','').trim();
-								parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
-									res.status(200).send({"error":false,"message":"rate charge applicable found.","base_charge":getChargeCallback});
-								});
+								if(distance_in_km <= process.env.LITTLE_RATE_CARD_UPPER_LIMIT) {
+									parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
+										res.status(200).send({"error":false,"message":"rate charge applicable found.","base_charge":getChargeCallback});
+									});
+							    }else{
+									res.status(200).send({"error":true,"message":"Attention: request cannot be handled within the current RATE CARD."});
+								}
 							} else{
 								res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
 							}
