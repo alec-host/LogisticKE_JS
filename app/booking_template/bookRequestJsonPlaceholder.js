@@ -6,7 +6,7 @@ dotenv.config();
 /**
 *-.method: json template for single book request.
 **/
-function sigleBookingJsonBluePrint(content,is_live="no") {
+function singleBookingJsonBluePrint(content,is_live="no") {
 
 	var vehicle_type = process.env.API_LITTLE_VEHICLE_TYPE.split(',');
 
@@ -74,4 +74,4 @@ function sigleBookingJsonBluePrint(content,is_live="no") {
 	return payload;
 }
 
-module.exports.sigleBookingJsonBluePrint = sigleBookingJsonBluePrint;
+module.exports.sigleBookingJsonBluePrint = singleBookingJsonBluePrint;
