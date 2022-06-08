@@ -87,14 +87,20 @@ module.exports = function(app) {
 							var rate_card_obj = store.rateCardConfig(); 
 							if(rate_card_obj) {
 								var distance_in_km = (getRateCardCallback['rows'][0]['elements'][0]['distance']['text']).replace('km','').trim();
+								//-.distance greater than set rates on the rate card.
 								if(distance_in_km <= process.env.LITTLE_RATE_CARD_UPPER_LIMIT) {
-									parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
-										res.status(200).send({"error":false,"message":"rate charge applicable found.","base_charge":getChargeCallback});
-									});
+									//-.distance is zero or a few metres.
+									if(distance_in_km.indexOf('m') > -1) {
+										res.status(200).send({"error":true,"message":"Attention: pickup & drop off cannot be the same location."});
+									}else{
+										parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
+											res.status(200).send({"error":false,"message":"rate charge applicable found.","estimate_charge":getChargeCallback});
+										});
+								    }
 							    }else{
 									res.status(200).send({"error":true,"message":"Attention: request cannot be handled within the current RATE CARD."});
 								}
-							} else{
+							}else{
 								res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
 							}
 						}else{
@@ -102,7 +108,7 @@ module.exports = function(app) {
 						}
 					});
 				}else{
-					res.status(200).send({"error":true,"message":"invalid input: i.e pickup/drop off points."});
+					res.status(200).send({"error":true,"message":"invalid input: i.e pickup/drop ofd points."});
 				}
 			});
 	   }else{
