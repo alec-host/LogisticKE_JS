@@ -51,18 +51,26 @@ module.exports = function(app) {
 				if(json_string.includes("BookRideServiceException") || json_string.includes("error")) {
 					//-.log the book request.
 					model.recordParcelBookRequest(conn,new_json,(error, row) => {
-						//model.updateParcelBookRequestWithTripID(conn,'1010111','254725239191', (error2,row2) => {
-							//-.message.
-							res.status(200).send(getServerResponseCallback);
-						//});
+						//-.link a book request to a trip id.
+						model.updateParcelBookRequestWithTripID(conn,{trip_id:'1010111',mobile_no: new_json.recipient_mobile}, (error2,row2) => {
+							//-.record trip information.
+							model.recordTripInformation(conn,{trip_id: '1010111',estimate_cost: 120,payload: {trip_id:12345678,distance:12,time:12}},(error,row3) => {
+								//-.message.
+								res.status(200).send(getServerResponseCallback);
+							});
+						});
 					});
 				}else{
 					//-.log the book request.
 					model.recordParcelBookRequest(conn,new_json,(error, row) => {
-						//model.updateParcelBookRequestWithTripID(conn,'1010112','254725239191', (error2,row2) => {
-							//-.message.
-							res.status(200).send(getServerResponseCallback);
-						//});
+						//-.link a book request to a trip id.
+						model.updateParcelBookRequestWithTripID(conn,{trip_id:'1010111',mobile_no: new_json.recipient_mobile}, (error2,row2) => {
+							//-.record trip information.
+							model.recordTripInformation(conn,{trip_id: '1010111',estimate_cost: 120,payload: {trip_id:12345678,distance:12,time:12}},(error,row3) => {
+								//-.message.
+								res.status(200).send(getServerResponseCallback);
+							});
+						});
 					});
 				}
 			});

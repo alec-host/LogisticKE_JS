@@ -30,13 +30,12 @@ function updateParcelBookRequestWithTripID(pool,content,recordCallback) {
 		if(err){
 			throw err;
 		}else{
-			var params = [content.trip_id,content.mobile_no];
+			let params = [content.trip_id,content.mobile_no];
 			conn.query("UPDATE " + 
 					   "`db_parcel_service`.`tbl_booking_request` " +
-					   "SET "+
-					   +"`trip_id` = ? " +
+					   "SET `trip_id` = ? " +
 					   "WHERE " +
-					   "`trip_id` IS NULL AND `recipient_mobile` = ?;" ,params, (err, res) => {
+					   "`recipient_mobile` = ? AND `trip_id` IS NULL ORDER BY `_id` DESC LIMIT 1;" ,params, (err, res) => {
 				if(err) throw err;
 				recordCallback(err, res);
 				conn.release();
@@ -44,13 +43,24 @@ function updateParcelBookRequestWithTripID(pool,content,recordCallback) {
 		}
 	});
 }
-
-function getCustomerExist(pool,msisdn,recordCallback) {
+/**
+ *-.method:recordTripInformation.
+ *-.record trip information.
+ **/
+ function recordTripInformation(pool,content,recordCallback) {
 	pool.getConnection((err, conn) => {
 		if(err){
 			throw err;
 		}else{
-			conn.query("SELECT COUNT(`_id`) AS CNT FROM `tbl_customer` WHERE `msisdn` = ? ",msisdn, (err, res) => {
+			var insert_value = [content.trip_id,content.estimate_cost,JSON.stringify(content.payload)];
+			console.log(insert_value);
+
+			conn.query("INSERT " + 
+			           "INTO " +
+					   "`db_parcel_service`.`tbl_trip` " +
+					   "(`trip_id`,`estimate_cost`,`book_ride_payload`) " +
+					   "VALUES (?,?,?) " +
+					   "ON DUPLICATE KEY UPDATE `modified_at` = NOW();" ,insert_value, (err, res) => {
 				if(err) throw err;
 				recordCallback(err, res);
 				conn.release();
@@ -58,38 +68,30 @@ function getCustomerExist(pool,msisdn,recordCallback) {
 		}
 	});
 }
-
-function getCustomerList(pool,recordCallback) {
+/**
+ *-.method:markTripAsCancelled.
+ *-.updates booking request.
+ **/
+ function markTripAsCancelled(pool,content,recordCallback) {
 	pool.getConnection((err, conn) => {
-		if(err){ 
+		if(err){
 			throw err;
 		}else{
-			conn.query("SELECT `unique_uid`,`first_name`,`second_name`,`msisdn` FROM `tbl_customer` LIMIT 5;",(err, res, fields) => {
-				if(err) throw err;
-				recordCallback(err, res, fields);
-				conn.release();
-			});
-		}
-	});
-}
-
-function getCustmerName(pool,msisdn,recordCallback) {
-	pool.getConnection((err, conn) => {
-		if(err) {
-			throw err;
-		}else{
-			conn.query("SELECT `first_name`, `second_name` FROM `tbl_customer` WHERE `msisdn` = ?;" ,[msisdn], (err, res) => {
+			let param = [content.trip_id];
+			conn.query("UPDATE " + 
+					   "`db_parcel_service`.`tbl_trip` " +
+					   "SET `is_cancelled` = 1 " +
+					   "WHERE " +
+					   "`is_cancelled` = 0 AND `modified_at` = NOW() AND `trip_id` = ?;" ,params, (err, res) => {
 				if(err) throw err;
 				recordCallback(err, res);
 				conn.release();
 			});
 		}
 	});
-	
 }
 
 module.exports.recordParcelBookRequest = recordParcelBookRequest;
 module.exports.updateParcelBookRequestWithTripID = updateParcelBookRequestWithTripID;
-module.exports.getCustomerExist = getCustomerExist;
-module.exports.getCustomerList = getCustomerList;
-module.exports.getCustmerName = getCustmerName;
+module.exports.recordTripInformation = recordTripInformation;
+module.exports.markTripAsCancelled = markTripAsCancelled;
