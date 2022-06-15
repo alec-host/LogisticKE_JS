@@ -166,7 +166,7 @@ bookDelivery = function (provider,content,token_json,callback) {
 		"headers": headers_payload,
 		"data": JSON.parse(data)
 	};
-	
+
 	axios.request(options).then(function(response) {
 		callback(response.data)
 	}).catch(function(error){
@@ -179,7 +179,7 @@ bookDelivery = function (provider,content,token_json,callback) {
 **/
 getShippingEstimate = function (provider,content,token_json,callback) {
 
-	callback   = callback || function(){};	
+	callback   = callback || function(){}	
 	/*
 	-.convert to json object.
 	*/
