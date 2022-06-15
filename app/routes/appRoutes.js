@@ -17,7 +17,7 @@ const test_driver = require('../utils/testRiderHandler');
 const test_estimate_price = require('../utils/testPriceEstimateHandler');
 const test_estimate_json = require('../booking_template/test-estimate-json');
 
-var conn = mysql.createPool({connectionLimit: db.connectionLimit, host: db.host, user: db.user, password: db.password, database: db.database});
+var conn =  mysql.createPool({connectionLimit: db.connectionLimit, host: db.host, port: db.port ,user: db.user, password: db.password, database: db.database});
 
 module.exports = function(app) {
 	
