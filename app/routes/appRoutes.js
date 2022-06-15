@@ -32,49 +32,68 @@ module.exports = function(app) {
 	*/
 	app.post('/bookApi', async (req, res) => {
 		var client_json = req.body;
-		var date_part = new Date().toISOString().slice(0, 10) ;
-		var t = new Date();
-		var new_json = Object.assign({reference_no: crypto.randomBytes(16).toString("hex")},client_json,{date_created: date_part+" "+t.getHours()+':'+t.getMinutes()+':'+t.getSeconds()});
-		
-		utils.generateClientToken({"provider": "little"},(getActiveTokenCallback) => {
-			/*
-			*-.parse params to book json object.
-			*-.method:sigleBookingJsonBluePrint.
-			*/
-			var parsed_client_json = template.sigleBookingJsonBluePrint(client_json,"no");
-			/*
-			*-.make a booking operation.
-			*-.method:bookDelivery.
-			*/
-			utils.bookDelivery({"provider": "little"},parsed_client_json,getActiveTokenCallback,(getServerResponseCallback) => {
-				var json_string = JSON.stringify(getServerResponseCallback);
-				if(json_string.includes("BookRideServiceException") || json_string.includes("error")) {
-					//-.log the book request.
-					model.recordParcelBookRequest(conn,new_json,(error, row) => {
-						//-.link a book request to a trip id.
-						model.updateParcelBookRequestWithTripID(conn,{trip_id:'1010111',mobile_no: new_json.recipient_mobile}, (error2,row2) => {
-							//-.record trip information.
-							model.recordTripInformation(conn,{trip_id: '1010111',estimate_cost: 120,payload: {trip_id:12345678,distance:12,time:12}},(error,row3) => {
-								//-.message.
-								res.status(200).send(getServerResponseCallback);
+		if(Object.keys(req.body).length !== 0) {
+			var date_part = new Date().toISOString().slice(0, 10) ;
+			var t = new Date();
+			var new_json = Object.assign({reference_no: crypto.randomBytes(16).toString("hex")},client_json,{date_created: date_part+" "+t.getHours()+':'+t.getMinutes()+':'+t.getSeconds()});
+			
+			utils.generateClientToken({"provider": "little"},(getActiveTokenCallback) => {
+				/*
+				*-.parse params to book json object.
+				*-.method:sigleBookingJsonBluePrint.
+				*/
+				var parsed_client_json = template.sigleBookingJsonBluePrint(client_json,"no");
+				/*
+				*-.make a booking operation.
+				*-.method:bookDelivery.
+				*/
+				utils.bookDelivery({"provider": "little"},parsed_client_json,getActiveTokenCallback,(getServerResponseCallback) => {
+					var json_string = JSON.stringify(getServerResponseCallback);
+					if(json_string.includes("BookRideServiceException") || json_string.includes("error")) {
+						//-.message.
+						res.status(200).send(getServerResponseCallback);
+					}else{
+
+						resp = JSON.parse(getServerResponseCallback);
+
+						var res_ = {
+
+										"tripId": "2F2FB0CD-B7D0-424A-9053-52EA1B4F8A81-2022-05",
+										"distance": "5.00",
+										"time": "5.00",
+										"driver": {
+													"name": "JOE",
+													"email": "",
+													"mobile": "25472XXXXXXX",
+													"picture": "https://",
+													"rating": "4.76"
+										},
+										"car": {
+													"model": "TVS",
+													"plate": "kabcd 123456 b",
+													"color": "BLACK_GOLD",
+													"latlng": "-1.260982400000000,36.803992000000001",
+													"distance": "0",
+													"time": "0"
+										}
+									};
+						//-.log the book request.
+						model.recordParcelBookRequest(conn,new_json,(error, row) => {
+							//-.link a book request to a trip id.
+							model.updateParcelBookRequestWithTripID(conn,{trip_id: resp.tripId, mobile_no: new_json.recipient_mobile}, (error2,row2) => {
+									//-.record trip information.
+									model.recordTripInformation(conn,{trip_id: resp.tripId, estimate_cost: 120, payload: {trip_id: resp.tripId, distance: resp.distance, time: resp.time, driver: resp.driver, car: resp.car}},(error,row3) => {
+											//-.message.
+											res.status(200).send(getServerResponseCallback);
+									});
 							});
 						});
-					});
-				}else{
-					//-.log the book request.
-					model.recordParcelBookRequest(conn,new_json,(error, row) => {
-						//-.link a book request to a trip id.
-						model.updateParcelBookRequestWithTripID(conn,{trip_id:'1010111',mobile_no: new_json.recipient_mobile}, (error2,row2) => {
-							//-.record trip information.
-							model.recordTripInformation(conn,{trip_id: '1010111',estimate_cost: 120,payload: {trip_id:12345678,distance:12,time:12}},(error,row3) => {
-								//-.message.
-								res.status(200).send(getServerResponseCallback);
-							});
-						});
-					});
-				}
+					}
+				});
 			});
-		});
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
 	});
 	/**
 	* @route GET /getCostEstimateApi
@@ -84,44 +103,48 @@ module.exports = function(app) {
 	* @returns {Error} default - {message: ops something wrong has happened.}
 	*/
 	app.get('/getCostEstimateApi', async(req,res) => {
-		var origins = req.body.origins;
-		var destinations = req.body.destinations;
-		if(origins != '' && destinations !='') {
-			//-.validate coordinates - lat/lng.
-			valid.validateLocationCordinates(origins,destinations,(getIsValidLocationCordinatesCallback) => {
-				if(getIsValidLocationCordinatesCallback == true) {
-					matrix_distance.distanceByGoogleMatrixApi(origins,destinations,(getRateCardCallback) => {
-						if(getRateCardCallback) {
-							var rate_card_obj = store.rateCardConfig(); 
-							if(rate_card_obj) {
-								var distance_in_km = (getRateCardCallback['rows'][0]['elements'][0]['distance']['text']).replace('km','').trim();
-								//-.distance greater than set rates on the rate card.
-								if(distance_in_km <= process.env.LITTLE_RATE_CARD_UPPER_LIMIT) {
-									//-.distance is zero or a few metres.
-									if(distance_in_km.indexOf('m') > -1) {
-										res.status(200).send({"error":true,"message":"Attention: pickup & drop off cannot be the same location."});
+		if(Object.keys(req.body).length !== 0) {
+			var origins = req.body.origins;
+			var destinations = req.body.destinations;
+			if(origins != '' && destinations !='') {
+				//-.validate coordinates - lat/lng.
+				valid.validateLocationCordinates(origins,destinations,(getIsValidLocationCordinatesCallback) => {
+					if(getIsValidLocationCordinatesCallback == true) {
+						matrix_distance.distanceByGoogleMatrixApi(origins,destinations,(getRateCardCallback) => {
+							if(getRateCardCallback) {
+								var rate_card_obj = store.rateCardConfig(); 
+								if(rate_card_obj) {
+									var distance_in_km = (getRateCardCallback['rows'][0]['elements'][0]['distance']['text']).replace('km','').trim();
+									//-.distance greater than set rates on the rate card.
+									if(distance_in_km <= process.env.LITTLE_RATE_CARD_UPPER_LIMIT) {
+										//-.distance is zero or a few metres.
+										if(distance_in_km.indexOf('m') > -1) {
+											res.status(200).send({"error":true,"message":"Attention: pickup & drop off cannot be the same location."});
+										}else{
+											parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
+												res.status(200).send({"error":false,"message":"rate charge applicable found.","estimate_charge":getChargeCallback});
+											});
+										}
 									}else{
-										parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
-											res.status(200).send({"error":false,"message":"rate charge applicable found.","estimate_charge":getChargeCallback});
-										});
-								    }
-							    }else{
-									res.status(200).send({"error":true,"message":"Attention: request cannot be handled within the current RATE CARD."});
+										res.status(200).send({"error":true,"message":"Attention: request cannot be handled within the current RATE CARD."});
+									}
+								}else{
+									res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
 								}
 							}else{
-								res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
+								res.status(200).send({"error":true,"message":"Ops something wrong has happened."});
 							}
-						}else{
-							res.status(200).send({"error":true,"message":"Ops something wrong has happened."});
-						}
-					});
-				}else{
-					res.status(200).send({"error":true,"message":"invalid input: i.e pickup/drop ofd points."});
-				}
-			});
-	   }else{
-			res.status(200).send({"error":true,"message":"pickup and drop off points have to be checked."});
-	   }
+						});
+					}else{
+						res.status(200).send({"error":true,"message":"invalid input: i.e pickup/drop ofd points."});
+					}
+				});
+			}else{
+				res.status(200).send({"error":true,"message":"pickup and drop off points have to be checked."});
+			}
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
 	});
 	/**
 	* @route POST /cancelApi
@@ -132,11 +155,15 @@ module.exports = function(app) {
 	*/	
 	app.post('/cancelApi', async(req,res) => {
 		var client_json = req.body;
-		utils.generateClientToken(client_json,(getActiveTokenCallback) => {	
-			utils.cancelBookRequest(client_json,getActiveTokenCallback,(getServerResponseCallback) => {	
-				res.status(200).send(getServerResponseCallback);
+		if(Object.keys(req.body).length !== 0) {
+			utils.generateClientToken(client_json,(getActiveTokenCallback) => {	
+				utils.cancelBookRequest(client_json,getActiveTokenCallback,(getServerResponseCallback) => {	
+					res.status(200).send(getServerResponseCallback);
+				});
 			});
-		});
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
 	});
 	/**
 	* @route POST /testGetTokenApi
@@ -146,9 +173,13 @@ module.exports = function(app) {
 	*/	
 	app.post('/testGetTokenApi', async(req,res) => {
 		var client_json = req.body;
-		utils.generateClientToken(client_json,(getActiveToken) => {		
-			res.status(200).send(getActiveToken);
-		});
+		if(Object.keys(req.body).length !== 0) {
+			utils.generateClientToken(client_json,(getActiveToken) => {		
+				res.status(200).send(getActiveToken);
+			});
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
 	});
 	/**
 	* @route POST /testGetDriverApi
@@ -159,11 +190,15 @@ module.exports = function(app) {
 	*/	
 	app.post('/testGetDriverApi', async (req, res) => {
 		var client_json = req.body;
-		utils.generateClientToken({"provider": "little"},(getAccessToken) => {
-			utils.pickDriver(client_json,getAccessToken,(getServerResponse) => {
-				res.status(200).send(test_driver.driverInformationFilter(getServerResponse));
-			});			
-		});
+		if(Object.keys(req.body).length !== 0) {
+			utils.generateClientToken({"provider": "little"},(getAccessToken) => {
+				utils.pickDriver(client_json,getAccessToken,(getServerResponse) => {
+					res.status(200).send(test_driver.driverInformationFilter(getServerResponse));
+				});			
+			});
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
 	});
 	/**
 	* @route GET /testEstimateCostParserApi
@@ -173,19 +208,22 @@ module.exports = function(app) {
 	*/
 	app.post('/testEstimateCostParserApi', async (req, res) => {
 		var client_json = req.body;
+		if(Object.keys(req.body).length !== 0) {
+			var vehicle_type = process.env.API_LITTLE_VEHICLE_TYPE.split(',');
 
-		var vehicle_type = process.env.API_LITTLE_VEHICLE_TYPE.split(',');
-
-		utils.generateClientToken({"provider": "little"},(getActiveToken) => {	
-			utils.getShippingEstimate({"provider": "little"},client_json,getActiveToken,(getServerResponse) => {	
-			if(getServerResponse !== undefined) {
-				let price_range = test_estimate_price.getDeliveryPriceEstimate(JSON.parse(getServerResponse),vehicle_type[5]);
-				res.status(200).send({price_range});
-			}else{
-				res.status(200).send({"message":"ops something wrong has happened."});
-			}
+			utils.generateClientToken({"provider": "little"},(getActiveToken) => {	
+				utils.getShippingEstimate({"provider": "little"},client_json,getActiveToken,(getServerResponse) => {	
+				if(getServerResponse !== undefined) {
+					let price_range = test_estimate_price.getDeliveryPriceEstimate(JSON.parse(getServerResponse),vehicle_type[5]);
+					res.status(200).send({price_range});
+				}else{
+					res.status(200).send({"message":"ops something wrong has happened."});
+				}
+				});
 			});
-		});
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
 	});
 	/**
 	* @route GET /testGetJsonTemplateApi
