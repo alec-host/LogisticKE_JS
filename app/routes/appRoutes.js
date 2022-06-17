@@ -50,19 +50,21 @@ module.exports = function(app) {
 				utils.bookDelivery({"provider":"little"},parsed_client_json,getActiveTokenCallback,(getServerResponseCallback) => {
 					var json_string = JSON.stringify(getServerResponseCallback);
 					if(json_string.includes("BookRideServiceException") || json_string.includes("error")) {
+						var payload = {error:true,message:getServerResponseCallback.reason.Message};
 						//-.message.
-						res.status(200).send(getServerResponseCallback);
+						res.status(200).send(payload);
 					} else {
-
-						resp = JSON.parse(getServerResponseCallback);
+						var resp = JSON.parse(getServerResponseCallback);
 						//-.log the book request.
 						model.recordParcelBookRequest(conn,new_json,(error, row) => {
 							//-.link a book request to a trip id.
 							model.updateParcelBookRequestWithTripID(conn,{trip_id: resp.tripId, mobile_no: new_json.recipient_mobile}, (error2,row2) => {
+									let inner_payload = {trip_id:resp.tripId,order_id,order_id:client_json.order_id,distance:resp.distance,time:resp.time,driver:resp.driver,car:resp.car};
+									let payload = {trip_id:resp.tripId,estimate_cost:client_json.estimate_cost,payload:inner_payload};
 									//-.record trip information.
-									model.recordTripInformation(conn,{trip_id: resp.tripId, estimate_cost: client_json.estimate_cost, payload: {trip_id: resp.tripId, distance: resp.distance, time: resp.time, driver: resp.driver, car: resp.car}},(error,row3) => {
+									model.recordTripInformation(conn,payload,(error,row3) => {
 										//-.message.
-										res.status(200).send({error:false,message:"booking request was successful"});
+										res.status(200).send({error:false,data:inner_payload,message:"booking request was successful"});
 									});
 							});
 						});
