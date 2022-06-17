@@ -15,20 +15,20 @@ driverInformationFilter = function(json_payload,callback) {
 			**/
 			return item !== undefined && (item.rating == 5 && item.distance <= 1);
 		});
-		if(found[0]){
+		if(found[0]) {
 			return found[0];
-		}else{
-			return {"message": "no rider found"};
+		} else {
+			return {error:true,message:"no rider found"};
 		}
-	}else{
-		try{
+	} else {
+		try {
 			if(json_payload === undefined) {
-				return {"message":"missing access token"};
-			}else{
-				return {"message": "no rider found"};
+				return {error:true,message:"missing access token"};
+			} else {
+				return {error:true,message:"no rider found"};
 			}
-		}catch(error) {
-			return {"message": "error: something wrong has happened"};
+		} catch(error) {
+			return {error:true,message:"something wrong has happened"};
 		}
 	}
 }

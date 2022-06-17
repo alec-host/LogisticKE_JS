@@ -35,9 +35,9 @@ module.exports = function(app) {
 		if(Object.keys(req.body).length !== 0) {
 			var date_part = new Date().toISOString().slice(0, 10) ;
 			var t = new Date();
-			var new_json = Object.assign({reference_no: crypto.randomBytes(16).toString("hex")},client_json,{date_created: date_part+" "+t.getHours()+':'+t.getMinutes()+':'+t.getSeconds()});
+			var new_json = Object.assign({reference_no:crypto.randomBytes(16).toString("hex")},client_json,{date_created:date_part+" "+t.getHours()+':'+t.getMinutes()+':'+t.getSeconds()});
 			
-			utils.generateClientToken({"provider": "little"},(getActiveTokenCallback) => {
+			utils.generateClientToken({"provider":"little"},(getActiveTokenCallback) => {
 				/*
 				*-.parse params to book json object.
 				*-.method:sigleBookingJsonBluePrint.
@@ -47,12 +47,12 @@ module.exports = function(app) {
 				*-.make a booking operation.
 				*-.method:bookDelivery.
 				*/
-				utils.bookDelivery({"provider": "little"},parsed_client_json,getActiveTokenCallback,(getServerResponseCallback) => {
+				utils.bookDelivery({"provider":"little"},parsed_client_json,getActiveTokenCallback,(getServerResponseCallback) => {
 					var json_string = JSON.stringify(getServerResponseCallback);
 					if(json_string.includes("BookRideServiceException") || json_string.includes("error")) {
 						//-.message.
 						res.status(200).send(getServerResponseCallback);
-					}else{
+					} else {
 
 						resp = JSON.parse(getServerResponseCallback);
 						//-.log the book request.
@@ -61,16 +61,16 @@ module.exports = function(app) {
 							model.updateParcelBookRequestWithTripID(conn,{trip_id: resp.tripId, mobile_no: new_json.recipient_mobile}, (error2,row2) => {
 									//-.record trip information.
 									model.recordTripInformation(conn,{trip_id: resp.tripId, estimate_cost: client_json.estimate_cost, payload: {trip_id: resp.tripId, distance: resp.distance, time: resp.time, driver: resp.driver, car: resp.car}},(error,row3) => {
-											//-.message.
-											res.status(200).send({"error":false,"message":"booking request was successful"});
+										//-.message.
+										res.status(200).send({error:false,message:"booking request was successful"});
 									});
 							});
 						});
 					}
 				});
 			});
-		}else{
-			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		} else {
+			res.status(200).send({error:true,message:"content cannot be empty."});
 		}
 	});
 	/**
@@ -97,31 +97,31 @@ module.exports = function(app) {
 									if(distance_in_km <= process.env.LITTLE_RATE_CARD_UPPER_LIMIT) {
 										//-.distance is zero or a few metres.
 										if(distance_in_km.indexOf('m') > -1) {
-											res.status(200).send({"error":true,"message":"Attention: pickup & drop off cannot be the same location."});
-										}else{
+											res.status(200).send({error:true,message:"Attention: pickup & drop off cannot be the same location."});
+										} else {
 											parcel_charge.getParcelCharge(Math.round(distance_in_km),rate_card_obj,(getChargeCallback) => {
-												res.status(200).send({"error":false,"message":"rate charge applicable found.","estimate_charge":getChargeCallback});
+												res.status(200).send({error:false,data:{estimate_charge:getChargeCallback},message:"rate charge applicable found."});
 											});
 										}
-									}else{
-										res.status(200).send({"error":true,"message":"Attention: request cannot be handled within the current RATE CARD."});
+									} else {
+										res.status(200).send({error:true,message:"Attention: request cannot be handled within the current RATE CARD."});
 									}
-								}else{
-									res.status(200).send({"error":true,"message":"Attention: rate card js file is empty."});
+								} else {
+									res.status(200).send({error:true,message:"Attention: rate card js file is empty."});
 								}
-							}else{
-								res.status(200).send({"error":true,"message":"Ops something wrong has happened."});
+							} else {
+								res.status(200).send({error:true,message:"Ops something wrong has happened."});
 							}
 						});
-					}else{
-						res.status(200).send({"error":true,"message":"invalid input: i.e pickup/drop ofd points."});
+					} else {
+						res.status(200).send({error:true,message:"invalid input: i.e pickup/drop ofd points."});
 					}
 				});
-			}else{
-				res.status(200).send({"error":true,"message":"pickup and drop off points have to be checked."});
+			} else {
+				res.status(200).send({error:true,message:"pickup and drop off points have to be checked."});
 			}
-		}else{
-			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		} else {
+			res.status(200).send({error:true,message:"content cannot be empty."});
 		}
 	});
 	/**
@@ -137,11 +137,11 @@ module.exports = function(app) {
 			utils.generateClientToken(client_json,(getActiveTokenCallback) => {	
 				utils.cancelBookRequest(client_json,getActiveTokenCallback,(getServerResponseCallback) => {	
 					let resp = getServerResponseCallback;
-					res.status(200).send({"error":false,"data": {"trip_id": resp.tripId},"message": resp.message});
+					res.status(200).send({error:false,data:{trip_id: resp.tripId},message:resp.message});
 				});
 			});
-		}else{
-			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		} else {
+			res.status(200).send({error:true,message:"content cannot be empty."});
 		}
 	});
 	/**
@@ -154,14 +154,14 @@ module.exports = function(app) {
 		var trip_id = req.body.trip_id;
 		var payload;
 		if(Object.keys(req.body).length !== 0) {
-			utils.generateClientToken({"provider": "little"},(getActiveTokenCallback) => {	
-				utils.getDeliveryStatus({"trip_id": trip_id,"provider": "little"},getActiveTokenCallback,(getServerResponseCallback) => {
+			utils.generateClientToken({provider:"little"},(getActiveTokenCallback) => {	
+				utils.getDeliveryStatus({trip_id:trip_id,provider:"little"},getActiveTokenCallback,(getServerResponseCallback) => {
 					let resp = getServerResponseCallback;
 					let payload = {trip_id:resp.tripId,startedOn:resp.startedOn,status:resp.tripStatus,driver:resp.driver,order_id:"000000",trip_cost:resp.tripCost};
-					res.status(200).send({"error":false,"data": {payload},"message": "trip information"});
+					res.status(200).send({error:false,data: {payload},message:"delivery status information"});
 				});
 			});
-		}else{
+		} else {
 			res.status(200).send({"error":true,"message":"content cannot be empty."});
 		}
 	});
@@ -177,8 +177,8 @@ module.exports = function(app) {
 			utils.generateClientToken(client_json,(getActiveToken) => {		
 				res.status(200).send(getActiveToken);
 			});
-		}else{
-			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		} else {
+			res.status(200).send({error:true,message:"content cannot be empty."});
 		}
 	});
 	/**
@@ -191,13 +191,13 @@ module.exports = function(app) {
 	app.post('/testGetDriverApi', async (req, res) => {
 		var client_json = req.body;
 		if(Object.keys(req.body).length !== 0) {
-			utils.generateClientToken({"provider": "little"},(getAccessToken) => {
+			utils.generateClientToken({provider:"little"},(getAccessToken) => {
 				utils.pickDriver(client_json,getAccessToken,(getServerResponse) => {
 					res.status(200).send(test_driver.driverInformationFilter(getServerResponse));
 				});			
 			});
-		}else{
-			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		} else {
+			res.status(200).send({error:true,message:"content cannot be empty."});
 		}
 	});
 	/**
@@ -211,18 +211,18 @@ module.exports = function(app) {
 		if(Object.keys(req.body).length !== 0) {
 			var vehicle_type = process.env.API_LITTLE_VEHICLE_TYPE.split(',');
 
-			utils.generateClientToken({"provider": "little"},(getActiveToken) => {	
-				utils.getShippingEstimate({"provider": "little"},client_json,getActiveToken,(getServerResponse) => {	
+			utils.generateClientToken({provider:"little"},(getActiveToken) => {	
+				utils.getShippingEstimate({provider:"little"},client_json,getActiveToken,(getServerResponse) => {	
 				if(getServerResponse !== undefined) {
 					let price_range = test_estimate_price.getDeliveryPriceEstimate(JSON.parse(getServerResponse),vehicle_type[5]);
 					res.status(200).send({price_range});
 				}else{
-					res.status(200).send({"error":true,"message":"ops something wrong has happened."});
+					res.status(200).send({error:true,message:"ops something wrong has happened."});
 				}
 				});
 			});
-		}else{
-			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		} else {
+			res.status(200).send({error:true,message:"content cannot be empty."});
 		}
 	});
 	/**

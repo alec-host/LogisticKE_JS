@@ -8,7 +8,7 @@ getDeliveryPriceEstimate = function(json_payload,vehicle_type) {
 	
 	let j_string = JSON.stringify(json_payload);
 
-	if(j_string){
+	if(j_string) {
 		
 		let result = JSON.parse(j_string).estimates;
 		
@@ -22,18 +22,18 @@ getDeliveryPriceEstimate = function(json_payload,vehicle_type) {
 
 		if(found[0]) {
 			return (found[0].estimate);
-		}else{
-			return  ({"message": "no vehicle found"});
+		} else {
+			return  ({error:true,message:"no vehicle found"});
 		}
-	}else{
-		try{
+	} else {
+		try {
 			if(json_payload === undefined) {
-				return  ({"message":"missing access token"});
-			}else{
-				return ({"message": "no vehicle found"});
+				return  ({error:true,message:"missing access token"});
+			} else {
+				return ({error:true,message:"no vehicle found"});
 			}
-		}catch(error){
-			return ({"message": "error: something wrong has happened"});
+		} catch(error) {
+			return ({error:true,message:"something wrong has happened"});
 		}
 	}
 }

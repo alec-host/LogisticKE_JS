@@ -76,7 +76,7 @@ pickDriver = function (content,token_json,callback) {
 	*/
 	auth = JSON.parse(token_json);
 
-	if(content.provider == 'little'){
+	if(content.provider == 'little') {
 		/**
 		* LITTLE HEADER
 		**/
@@ -88,7 +88,7 @@ pickDriver = function (content,token_json,callback) {
 							"Content-Length": "0",
 							"Authorization": "Bearer "+auth.token
 						  };
-	}else{
+	} else {
 		/**
 		* SENDYIT HEADER
 		**/
@@ -139,7 +139,7 @@ bookDelivery = function (provider,content,token_json,callback) {
 	var auth = JSON.parse(token_json);
 	var data = JSON.stringify(content);
 
-	if(provider.provider == 'little'){
+	if(provider.provider == 'little') {
 		/**
 		* LITTLE HEADER
 		**/
@@ -150,7 +150,7 @@ bookDelivery = function (provider,content,token_json,callback) {
 							"Content-Type": "application/json",
 							"Authorization": "Bearer "+auth.token
 						  };
-	}else{
+	} else {
 		/**
 		* SENDYIT HEADER
 		**/
@@ -185,7 +185,7 @@ getShippingEstimate = function (provider,content,token_json,callback) {
 	*/
 	auth = JSON.parse(token_json);
 	
-	if(provider.provider == 'little'){
+	if(provider.provider == 'little') {
 		/**
 		* LITTLE HEADER
 		**/
@@ -196,7 +196,7 @@ getShippingEstimate = function (provider,content,token_json,callback) {
 							"Content-Type": "application/json",
 							"Content-Length": "0",
 							"Authorization": "Bearer "+auth.token};
-	}else{
+	} else {
 		/**
 		* SENDYIT HEADER
 		**/
@@ -231,7 +231,7 @@ cancelBookRequest = function (content,token_json,callback) {
 	*/
 	var auth = JSON.parse(token_json);
 	var data = JSON.stringify({reason: content.reason});
-	if(content.provider == 'little'){
+	if(content.provider == 'little') {
 		/**
 		* LITTLE HEADER
 		**/
@@ -241,7 +241,7 @@ cancelBookRequest = function (content,token_json,callback) {
 		headers_payload = {			
 			"Content-Type": "application/json",
 			"Authorization": "Bearer "+auth.token};
-	}else{
+	} else {
 		/**
 		* SENDYIT HEADER
 		**/
@@ -275,7 +275,7 @@ getDeliveryStatus = function (content,token_json,callback) {
 	-.convert to json object.
 	*/
 	var auth = JSON.parse(token_json);
-	if(content.provider == 'little'){
+	if(content.provider == 'little') {
 		/**
 		* LITTLE HEADER
 		**/
@@ -285,7 +285,7 @@ getDeliveryStatus = function (content,token_json,callback) {
 		headers_payload = {			
 			"Content-Type": "application/json",
 			"Authorization": "Bearer "+auth.token};
-	}else{
+	} else {
 		/**
 		* SENDYIT HEADER
 		**/
