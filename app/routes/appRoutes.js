@@ -24,7 +24,7 @@ module.exports = function(app) {
 	app.use(express.json());
 		
 	/**
-	* @route POST /bookApi
+	* @route POST /little-book
 	* @param {string} pickup.path.required
 	* @param {string} dropoff.path.required
 	* @returns {object} 200 - successful payload which includes trip id.
@@ -74,13 +74,13 @@ module.exports = function(app) {
 		}
 	});
 	/**
-	* @route GET /getCostEstimateApi
+	* @route GET /little-cost-estimate
 	* @param {string} origins.path.required
 	* @param {string} destinations.path.required
 	* @returns {object} 200 - successful payload which includes trip cost estimate etc.
 	* @returns {Error} default - {message: ops something wrong has happened.}
 	*/
-	app.get('/getCostEstimateApi', async(req,res) => {
+	app.get('/little-cost-estimate', async(req,res) => {
 		if(Object.keys(req.body).length !== 0) {
 			var origins = req.body.origins;
 			var destinations = req.body.destinations;
@@ -125,18 +125,40 @@ module.exports = function(app) {
 		}
 	});
 	/**
-	* @route POST /cancelApi
+	* @route POST /little-cancel
 	* @param {string} provider.path.required
 	* @param {string} trip_id.path.required
 	* @returns {object} 200 - returns a json object.
 	* @returns {Error} default - {message: ops something wrong has happened.}
 	*/	
-	app.post('/cancelApi', async(req,res) => {
+	app.post('/little-cancel', async(req,res) => {
 		var client_json = req.body;
 		if(Object.keys(req.body).length !== 0) {
 			utils.generateClientToken(client_json,(getActiveTokenCallback) => {	
 				utils.cancelBookRequest(client_json,getActiveTokenCallback,(getServerResponseCallback) => {	
-					res.status(200).send(getServerResponseCallback);
+					let resp = getServerResponseCallback;
+					res.status(200).send({"error":false,"data": {"trip_id": resp.tripId},"message": resp.message});
+				});
+			});
+		}else{
+			res.status(200).send({"error":true,"message":"content cannot be empty."});
+		}
+	});
+	/**
+	* @route GET /little-status
+	* @param {string} trip_id.path.required
+	* @returns {object} 200 - returns a json object.
+	* @returns {Error} default - {message: ops something wrong has happened.}
+	*/	
+	app.get('/little-status', async(req,res) => {
+		var trip_id = req.body.trip_id;
+		var payload;
+		if(Object.keys(req.body).length !== 0) {
+			utils.generateClientToken({"provider": "little"},(getActiveTokenCallback) => {	
+				utils.getDeliveryStatus({"trip_id": trip_id,"provider": "little"},getActiveTokenCallback,(getServerResponseCallback) => {
+					let resp = getServerResponseCallback;
+					let payload = {trip_id:resp.tripId,startedOn:resp.startedOn,status:resp.tripStatus,driver:resp.driver,order_id:"000000",trip_cost:resp.tripCost};
+					res.status(200).send({"error":false,"data": {payload},"message": "trip information"});
 				});
 			});
 		}else{
@@ -195,7 +217,7 @@ module.exports = function(app) {
 					let price_range = test_estimate_price.getDeliveryPriceEstimate(JSON.parse(getServerResponse),vehicle_type[5]);
 					res.status(200).send({price_range});
 				}else{
-					res.status(200).send({"message":"ops something wrong has happened."});
+					res.status(200).send({"error":true,"message":"ops something wrong has happened."});
 				}
 				});
 			});

@@ -264,9 +264,52 @@ cancelBookRequest = function (content,token_json,callback) {
 		callback(error);
 	}); 
 }
+/**
+*-.method: shipping estimate.
+*-.return: json payload.
+**/
+getDeliveryStatus = function (content,token_json,callback) {
+	let responseData = '';	
+	callback   = callback || function(){};	
+	/*
+	-.convert to json object.
+	*/
+	var auth = JSON.parse(token_json);
+	if(content.provider == 'little'){
+		/**
+		* LITTLE HEADER
+		**/
+		hostname = process.env.API_LITTLE_HOST_NAME;
+		app_path = process.env.API_LITTLE_STATUS_PATH.replace('{0}',content.trip_id);
+		method   = 'GET';
+		headers_payload = {			
+			"Content-Type": "application/json",
+			"Authorization": "Bearer "+auth.token};
+	}else{
+		/**
+		* SENDYIT HEADER
+		**/
+		headers_payload = {			
+							"Content-Type": "application/json",
+							"Content-Length": "0"
+						  };
+	}
 
+	const options = {
+		"method":method,
+		"url":'https://'+hostname+app_path,
+		"headers": headers_payload
+	};
+	
+	axios.request(options).then(function(response) {
+		callback(response.data)
+	}).catch(function(error){
+		callback(error);
+	}); 
+}
 module.exports.generateClientToken = generateClientToken;
 module.exports.pickDriver = pickDriver;
 module.exports.bookDelivery = bookDelivery;
 module.exports.getShippingEstimate = getShippingEstimate;
 module.exports.cancelBookRequest = cancelBookRequest;
+module.exports.getDeliveryStatus = getDeliveryStatus;
