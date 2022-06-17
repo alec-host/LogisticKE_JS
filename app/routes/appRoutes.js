@@ -62,7 +62,7 @@ module.exports = function(app) {
 									//-.record trip information.
 									model.recordTripInformation(conn,{trip_id: resp.tripId, estimate_cost: client_json.estimate_cost, payload: {trip_id: resp.tripId, distance: resp.distance, time: resp.time, driver: resp.driver, car: resp.car}},(error,row3) => {
 											//-.message.
-											res.status(200).send({error:false,message:'request was successful'});
+											res.status(200).send({"error":false,"message":"booking request was successful"});
 									});
 							});
 						});
