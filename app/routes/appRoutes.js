@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql   = require('mysql');
+const mysql   = require('mysql2');
 const crypto  = require('crypto'); 
 
 const db      = require('../db/config/dbConfig');
