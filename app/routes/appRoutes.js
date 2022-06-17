@@ -30,7 +30,7 @@ module.exports = function(app) {
 	* @returns {object} 200 - successful payload which includes trip id.
 	* @returns {Error} default - {message: ops something wrong has happened.}
 	*/
-	app.post('/bookApi', async (req, res) => {
+	app.post('/little-book', async (req, res) => {
 		var client_json = req.body;
 		if(Object.keys(req.body).length !== 0) {
 			var date_part = new Date().toISOString().slice(0, 10) ;
@@ -42,7 +42,7 @@ module.exports = function(app) {
 				*-.parse params to book json object.
 				*-.method:sigleBookingJsonBluePrint.
 				*/
-				var parsed_client_json = template.sigleBookingJsonBluePrint(client_json,"no");
+				var parsed_client_json = template.sigleBookingJsonBluePrint(client_json,"sandbox");
 				/*
 				*-.make a booking operation.
 				*-.method:bookDelivery.
@@ -55,36 +55,14 @@ module.exports = function(app) {
 					}else{
 
 						resp = JSON.parse(getServerResponseCallback);
-
-						var res_ = {
-
-										"tripId": "2F2FB0CD-B7D0-424A-9053-52EA1B4F8A81-2022-05",
-										"distance": "5.00",
-										"time": "5.00",
-										"driver": {
-													"name": "JOE",
-													"email": "",
-													"mobile": "25472XXXXXXX",
-													"picture": "https://",
-													"rating": "4.76"
-										},
-										"car": {
-													"model": "TVS",
-													"plate": "kabcd 123456 b",
-													"color": "BLACK_GOLD",
-													"latlng": "-1.260982400000000,36.803992000000001",
-													"distance": "0",
-													"time": "0"
-										}
-									};
 						//-.log the book request.
 						model.recordParcelBookRequest(conn,new_json,(error, row) => {
 							//-.link a book request to a trip id.
 							model.updateParcelBookRequestWithTripID(conn,{trip_id: resp.tripId, mobile_no: new_json.recipient_mobile}, (error2,row2) => {
 									//-.record trip information.
-									model.recordTripInformation(conn,{trip_id: resp.tripId, estimate_cost: 120, payload: {trip_id: resp.tripId, distance: resp.distance, time: resp.time, driver: resp.driver, car: resp.car}},(error,row3) => {
+									model.recordTripInformation(conn,{trip_id: resp.tripId, estimate_cost: client_json.estimate_cost, payload: {trip_id: resp.tripId, distance: resp.distance, time: resp.time, driver: resp.driver, car: resp.car}},(error,row3) => {
 											//-.message.
-											res.status(200).send(getServerResponseCallback);
+											res.status(200).send({error:false,message:'request was successful'});
 									});
 							});
 						});

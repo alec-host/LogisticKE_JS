@@ -6,17 +6,20 @@ dotenv.config();
 /**
 *-.method: json template for single book request.
 **/
-function singleBookingJsonBluePrint(content,is_live="no") {
+function singleBookingJsonBluePrint(content,environment="sandbox") {
 
 	var vehicle_type = process.env.API_LITTLE_VEHICLE_TYPE.split(',');
 
-	if(is_live == "no") {
-		mail = process.env.API_LITTLE_TEST_USER;;
+	if(environment == "sandbox") {
+		env_mail = process.env.API_LITTLE_TEST_USER;
+		env_mobile = process.env.API_LITTLE_TEST_MOBILE;
 	}else{
-		if(is_live == "") {
-			mail = process.env.API_LITTLE_TEST_USER;
+		if(is_live == "production") {
+			env_mail = process.env.API_LITTLE_LIVE_USER;
+			env_mobile = process.env.API_LITTLE_LIVE_MOBILE;
 		}else{
-			mail = process.env.API_AIRDUKA_MAIL;
+			env_mail = process.env.API_LITTLE_TEST_USER;
+			env_mobile = process.env.API_LITTLE_TEST_MOBILE;
 		}
 	}
 	var payload=null;
@@ -24,11 +27,11 @@ function singleBookingJsonBluePrint(content,is_live="no") {
 	valid.validateLocationCordinates(content.pick_up_latlng,content.drop_off_latlng,(getServerResponseCallback) => {
 		if(getServerResponseCallback == true) {
 			payload = {
-				"type":process.env.API_LITTLE_ACCOUNT_TYPE,
-				"driver":mail,
+				"type": process.env.API_LITTLE_ACCOUNT_TYPE,
+				"driver": env_mail,
 				"rider": {
-					"mobileNumber": content.mobile_number,
-					"name": content.name,
+					"mobileNumber": env_mobile,
+					"name": process.env.API_LITTLE_USER_NAME,
 					"picture": process.env.API_AIRDUKA_LOGO
 				},
 				"vehicle": {
@@ -55,8 +58,8 @@ function singleBookingJsonBluePrint(content,is_live="no") {
 				"dropOffs": [
 					{
 						"order": content.order_id,
-						"address": content.drop_off_address,
 						"latlng": content.drop_off_latlng,
+						"address": content.drop_off_address,
 						"contactMobileNumber": content.recipient_mobile,
 						"contactName": content.contact_name,
 						"notes":"next to ..."
